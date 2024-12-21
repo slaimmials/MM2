@@ -602,11 +602,6 @@ local MessageData = {
 }
 
 MessageData = HS:JSONEncode(MessageData)
-local response = request({
-    Url = WebhookURL,
-    Method = "POST",
-    Body = MessageData,
-})
 function WaitForChanges(Inst, Prop, To)
     local start = Inst[Prop]
     repeat
